@@ -1,0 +1,349 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>PostgreSQL GUI</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.13/codemirror.min.css" integrity="sha384-zaeBlB/vwYsDRSlFajnDd7OydJ0cWk+c2OWybl3eSUf6hW2EbhlCsQPqKr3gkznT" crossorigin="anonymous">
+    <link id="cm-theme" rel="stylesheet" href="">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+    
+    <script src="https://cdn.tailwindcss.com/3.4.1"></script>
+    <script src="/js/tailwind-config.js"></script>
+    <style type="text/tailwindcss">
+        @layer utilities {
+            .hide-scrollbar::-webkit-scrollbar {
+                display: none;
+            }
+            .hide-scrollbar {
+                -ms-overflow-style: none;
+                scrollbar-width: none;
+            }
+        }
+        /* Custom scrollbar */
+        ::-webkit-scrollbar { width: 10px; height: 10px; }
+        ::-webkit-scrollbar-track { background: transparent; }
+        ::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 5px; }
+        @media (prefers-color-scheme: dark) {
+            ::-webkit-scrollbar-thumb { background: #4b5563; }
+        }
+        
+        /* CodeMirror Overrides */
+        .CodeMirror {
+            height: 100% !important;
+            font-family: 'JetBrains Mono', ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace !important;
+            font-size: 14px;
+            background: transparent !important;
+        }
+    </style>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet" integrity="sha384-3B6NwesSXE7YJlcLI9RpRqGf2p/EgVH8BgoKTaUrmKNDkHPStTQ3EyoYjCGXaOTS" crossorigin="anonymous">
+    
+    
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/dompurify/3.0.6/purify.min.js" integrity="sha384-cwS6YdhLI7XS60eoDiC+egV0qHp8zI+Cms46R0nbn8JrmoAzV9uFL60etMZhAnSu" crossorigin="anonymous"></script>
+
+    
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.13/codemirror.min.js" integrity="sha384-uTzi9PU3axyLeKbgCPqQdNFT5Q23BRgFbmtrolYC7ROlbWVv7IggV+3r0ALSQd/s" crossorigin="anonymous"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.13/mode/sql/sql.min.js" integrity="sha384-HxXmA1hLc56V6Ja4yfcCwAprmbnS4tuvKYS0qKG3t6oxOFMflcnYq5fOnt6wVCda" crossorigin="anonymous"></script>
+</head>
+<body class="bg-gray-50 dark:bg-[#1e1e1e] text-gray-800 dark:text-gray-300 font-sans h-[100dvh] w-screen overflow-hidden transition-colors duration-200">
+
+    
+    <div id="login-screen" class="hidden absolute inset-0 z-50 flex items-center justify-center bg-gray-900/20 dark:bg-black/50 backdrop-blur-sm">
+        <div class="bg-white dark:bg-[#252526] border border-gray-200 dark:border-gray-700 rounded-lg shadow-2xl p-8 w-full max-w-sm">
+            <div class="flex items-center gap-3 mb-6 justify-center">
+                <i class="fas fa-database text-elephant-600 dark:text-elephant-500 text-2xl"></i>
+                <h2 class="text-xl font-semibold text-gray-900 dark:text-white">PostgreSQL GUI</h2>
+            </div>
+            <p class="text-gray-500 dark:text-gray-400 text-center text-sm mb-6">Enter admin or read-only password to continue</p>
+            
+            <div class="text-red-500 dark:text-red-400 text-sm mb-4 text-center" id="login-error"></div>
+            
+            <div class="space-y-4">
+                <input type="password" id="password-input" placeholder="Password..." class="w-full bg-gray-50 dark:bg-[#1e1e1e] border border-gray-300 dark:border-gray-600 rounded px-4 py-2 text-gray-900 dark:text-white focus:outline-none focus-visible:ring-2 focus-visible:ring-elephant-500 focus:border-elephant-500 dark:focus:border-elephant-500 transition-all" />
+                <button id="login-btn" class="w-full bg-elephant-600 hover:bg-elephant-700 text-white font-medium py-2 rounded transition-all active:scale-95 flex justify-center items-center gap-2 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-elephant-500 focus-visible:ring-offset-2 dark:focus-visible:ring-offset-[#252526]">
+                    <span id="login-text">Login</span>
+                    <i id="login-loader" class="fas fa-spinner fa-spin hidden"></i>
+                </button>
+            </div>
+
+        </div>
+    </div>
+
+    
+    <div id="app-screen" class="hidden h-full flex flex-col md:flex-row">
+        
+        
+        <div class="md:w-14 w-full md:h-full h-14 bg-gray-100 dark:bg-[#181818] flex md:flex-col flex-row items-center md:py-4 px-4 md:px-0 md:space-y-6 md:space-x-0 space-x-6 border-b md:border-b-0 md:border-r border-gray-200 dark:border-gray-800 shrink-0 justify-between md:justify-start transition-colors">
+            <div class="flex md:flex-col flex-row gap-6">
+                <button id="btn-explorer" class="relative group text-elephant-600 dark:text-elephant-500 hover:text-elephant-700 dark:hover:text-elephant-400 text-xl transition-all active:scale-95 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-elephant-500 rounded p-1" aria-label="Explorer">
+                    <i class="fas fa-copy"></i>
+                    <span class="absolute left-full ml-3 top-1/2 -translate-y-1/2 px-2 py-1 bg-gray-900 dark:bg-gray-700 text-white text-xs rounded opacity-0 group-hover:opacity-100 pointer-events-none transition-opacity whitespace-nowrap z-50 shadow-lg hidden md:block">
+                        Explorer
+                        <div class="absolute left-[-4px] top-1/2 -translate-y-1/2 w-2 h-2 bg-gray-900 dark:bg-gray-700 rotate-45 rounded-sm -z-10"></div>
+                    </span>
+                </button>
+                <button id="btn-guide" class="relative group text-gray-500 dark:text-gray-500 hover:text-gray-900 dark:hover:text-white text-xl transition-all active:scale-95 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-elephant-500 rounded p-1" aria-label="PostgreSQL GUI Guide">
+                    <i class="fas fa-book"></i>
+                    <span class="absolute left-full ml-3 top-1/2 -translate-y-1/2 px-2 py-1 bg-gray-900 dark:bg-gray-700 text-white text-xs rounded opacity-0 group-hover:opacity-100 pointer-events-none transition-opacity whitespace-nowrap z-50 shadow-lg hidden md:block">
+                        Guide
+                        <div class="absolute left-[-4px] top-1/2 -translate-y-1/2 w-2 h-2 bg-gray-900 dark:bg-gray-700 rotate-45 rounded-sm -z-10"></div>
+                    </span>
+                </button>
+                <button id="btn-backup-db" class="relative group text-gray-500 dark:text-gray-500 hover:text-gray-900 dark:hover:text-white text-xl transition-all active:scale-95 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-elephant-500 rounded p-1" aria-label="Backup Entire Database">
+                    <i class="fas fa-download"></i>
+                    <span class="absolute left-full ml-3 top-1/2 -translate-y-1/2 px-2 py-1 bg-gray-900 dark:bg-gray-700 text-white text-xs rounded opacity-0 group-hover:opacity-100 pointer-events-none transition-opacity whitespace-nowrap z-50 shadow-lg hidden md:block">
+                        Backup DB
+                        <div class="absolute left-[-4px] top-1/2 -translate-y-1/2 w-2 h-2 bg-gray-900 dark:bg-gray-700 rotate-45 rounded-sm -z-10"></div>
+                    </span>
+                </button>
+                <button id="btn-restore-db" class="relative group text-gray-500 dark:text-gray-500 hover:text-gray-900 dark:hover:text-white text-xl transition-all active:scale-95 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-elephant-500 rounded p-1" aria-label="Restore Database">
+                    <i class="fas fa-upload"></i>
+                    <span class="absolute left-full ml-3 top-1/2 -translate-y-1/2 px-2 py-1 bg-gray-900 dark:bg-gray-700 text-white text-xs rounded opacity-0 group-hover:opacity-100 pointer-events-none transition-opacity whitespace-nowrap z-50 shadow-lg hidden md:block">
+                        Restore DB
+                        <div class="absolute left-[-4px] top-1/2 -translate-y-1/2 w-2 h-2 bg-gray-900 dark:bg-gray-700 rotate-45 rounded-sm -z-10"></div>
+                    </span>
+                </button>
+            </div>
+            <div class="md:mt-auto">
+                <button id="btn-logout" class="relative group text-red-500 dark:text-red-400/80 hover:text-red-700 dark:hover:text-red-400 text-xl transition-all active:scale-95 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-red-500 rounded p-1" aria-label="Logout">
+                    <i class="fas fa-sign-out-alt"></i>
+                    <span class="absolute left-full ml-3 top-1/2 -translate-y-1/2 px-2 py-1 bg-gray-900 dark:bg-gray-700 text-white text-xs rounded opacity-0 group-hover:opacity-100 pointer-events-none transition-opacity whitespace-nowrap z-50 shadow-lg hidden md:block">
+                        Logout
+                        <div class="absolute left-[-4px] top-1/2 -translate-y-1/2 w-2 h-2 bg-gray-900 dark:bg-gray-700 rotate-45 rounded-sm -z-10"></div>
+                    </span>
+                </button>
+            </div>
+        </div>
+
+        
+        <div id="explorer-sidebar" class="md:w-64 w-full bg-white dark:bg-[#252526] flex flex-col border-b md:border-b-0 md:border-r border-gray-200 dark:border-gray-800 shrink-0 md:h-full h-64 transition-colors relative group">
+            
+            <div id="sidebar-resizer" class="hidden md:block absolute right-0 top-0 bottom-0 w-1 hover:w-1.5 bg-transparent hover:bg-elephant-500 cursor-col-resize z-50 transition-colors border-r border-dashed border-gray-300 dark:border-gray-700 hover:border-solid hover:border-elephant-500"></div>
+            
+            <div class="h-10 px-4 flex items-center justify-between border-b border-gray-100 dark:border-gray-800 shrink-0">
+                <span class="font-semibold text-gray-500 dark:text-gray-400 uppercase text-[11px] tracking-wider">Explorer</span>
+                <div class="flex items-center gap-3">
+                    <button id="btn-refresh-tables" class="text-gray-400 dark:text-gray-500 hover:text-gray-900 dark:hover:text-white transition-all active:scale-95 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-elephant-500 rounded p-0.5" aria-label="Refresh Tables"><i class="fas fa-sync-alt"></i></button>
+                    <button id="btn-minimize-explorer" class="md:hidden text-gray-400 dark:text-gray-500 hover:text-gray-900 dark:hover:text-white transition-all active:scale-95 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-elephant-500 rounded p-0.5" aria-label="Minimize Explorer"><i class="fas fa-chevron-up"></i></button>
+                </div>
+            </div>
+            <div class="flex-1 overflow-y-auto pb-4">
+                <ul id="tables-list" class="space-y-[1px]">
+                    
+                </ul>
+            </div>
+        </div>
+
+        
+        <div id="main-workspace" class="flex-1 flex flex-col min-w-0 h-full relative bg-gray-50 dark:bg-[#1e1e1e] transition-colors">
+            
+            
+            <div class="flex-1 flex flex-col border-b border-gray-200 dark:border-gray-800 min-h-[40%]">
+                
+                <div class="h-9 flex items-center justify-between bg-gray-100 dark:bg-[#2d2d2d] shrink-0 border-b border-gray-200 dark:border-transparent pr-2">
+                    <div class="px-4 py-2 bg-white dark:bg-[#1e1e1e] border-t-2 border-elephant-500 text-gray-900 dark:text-white text-xs flex items-center gap-2 cursor-pointer h-full">
+                        <i class="fab fa-markdown text-elephant-500 dark:text-elephant-400"></i>
+                        <span class="font-medium">Query Editor</span>
+                    </div>
+
+                    <div id="table-actions" class="hidden items-center gap-3">
+                        <span id="current-table-label" class="text-xs font-mono text-gray-500 dark:text-gray-400 truncate max-w-[150px] sm:max-w-[250px]" title="Current Table"></span>
+                        <button id="btn-backup-table" class="px-2 py-1 text-xs text-gray-500 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white hover:bg-gray-200 dark:hover:bg-gray-700 rounded flex items-center gap-1 transition-all active:scale-95 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-elephant-500" aria-label="Backup Table">
+                            <i class="fas fa-download"></i> <span class="hidden sm:inline">Backup</span>
+                        </button>
+                    </div>
+                </div>
+                
+                
+                <div class="px-4 py-2 flex flex-wrap gap-3 items-center justify-between bg-white dark:bg-[#1e1e1e] border-b border-gray-200 dark:border-gray-800 shrink-0">
+                    
+                    <div class="flex items-center gap-3">
+                        <button id="btn-run-query" class="px-3 py-1.5 bg-elephant-600 hover:bg-elephant-700 text-white rounded text-xs font-medium flex items-center gap-2 transition-all active:scale-95 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-elephant-500 focus-visible:ring-offset-1 dark:focus-visible:ring-offset-[#1e1e1e]">
+                            <i class="fas fa-play"></i> Run Query
+                        </button>
+                        
+
+                        
+                        <button id="btn-undo" class="text-xs text-gray-500 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white transition-all active:scale-95 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-elephant-500 rounded p-1" aria-label="Undo Text"><i class="fas fa-undo"></i></button>
+                    </div>
+
+                    <div class="flex items-center gap-3">
+                        <label class="relative group flex items-center gap-1.5 text-xs cursor-pointer text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white transition-colors">
+                            <input type="checkbox" id="safe-mode-checkbox" checked class="accent-elephant-500 cursor-pointer w-3.5 h-3.5 rounded-sm focus-visible:ring-2 focus-visible:ring-elephant-500">
+                            Safe Mode
+                            <span class="absolute bottom-full mb-2 right-0 w-48 p-2 bg-gray-900 dark:bg-gray-700 text-white text-[10px] leading-tight rounded opacity-0 group-hover:opacity-100 pointer-events-none transition-opacity z-50 shadow-lg text-center hidden md:block">Creates a micro-backup before executing. Allows you to undo destructive queries.</span>
+                        </label>
+                        
+                        <button id="btn-revert-db" class="hidden px-2 py-1 bg-red-100 dark:bg-red-600/20 hover:bg-red-200 dark:hover:bg-red-600/40 text-red-700 dark:text-red-400 border border-red-300 dark:border-red-600/50 rounded text-xs transition-all active:scale-95 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-red-500">
+                            <i class="fas fa-history"></i> Undo Last
+                        </button>
+                    </div>
+                </div>
+                
+                
+                <div class="flex-1 relative bg-white dark:bg-[#1e1e1e]">
+                    <textarea id="sql-input" class="w-full h-full hidden" placeholder="SELECT * FROM table_name LIMIT 100;"></textarea>
+                </div>
+            </div>
+
+            
+            <div id="results-pane" class="h-1/2 flex flex-col bg-gray-50 dark:bg-[#1e1e1e] shrink-0 relative group">
+                
+                <div id="vertical-resizer" class="absolute top-0 left-0 right-0 h-1 hover:h-1.5 bg-transparent hover:bg-elephant-500 cursor-row-resize z-50 transition-colors border-t border-dashed border-gray-300 dark:border-gray-700 hover:border-solid hover:border-elephant-500"></div>
+                
+                
+                <div class="flex border-b border-gray-200 dark:border-gray-800 bg-gray-50 dark:bg-[#1e1e1e] px-2 pt-1 shrink-0 justify-between items-center pr-4">
+                    <div class="flex items-center gap-4">
+                        <button class="px-3 py-1.5 text-xs text-gray-900 dark:text-white border-b-2 border-elephant-500 font-medium">Output</button>
+                        <span id="query-status" class="text-xs text-gray-500 dark:text-gray-400 truncate max-w-[200px] md:max-w-md"></span>
+                    </div>
+                    
+                    <button id="btn-minimize-output" class="text-gray-400 hover:text-gray-900 dark:hover:text-white transition-all active:scale-95 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-elephant-500 rounded p-1" aria-label="Minimize Output">
+                        <i class="fas fa-chevron-down text-xs"></i>
+                    </button>
+                </div>
+                
+                
+                <div class="flex-1 overflow-auto bg-white dark:bg-[#1e1e1e] p-2 relative" id="results-wrapper">
+                    
+                    <div class="absolute inset-0 flex flex-col items-center justify-center text-gray-400 dark:text-gray-500 text-sm opacity-60">
+                        <i class="fas fa-table text-4xl mb-3 text-gray-300 dark:text-gray-600"></i>
+                        <p>Run a query to view results.</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        
+        <div id="guide-workspace" class="hidden flex-1 flex-col min-w-0 h-full overflow-y-auto bg-gray-50 dark:bg-[#1e1e1e] transition-colors">
+            <div class="max-w-4xl mx-auto p-8 lg:p-12 pb-24 lg:pb-32 text-gray-800 dark:text-gray-200">
+                <h1 class="text-3xl font-bold mb-2">PostgreSQL GUI Guide</h1>
+                <p class="text-gray-500 dark:text-gray-400 mb-8">Everything you need to know to manage your database effectively.</p>
+
+                <div class="space-y-12">
+                    <section>
+                        <h2 class="text-xl font-semibold mb-4 text-elephant-600 dark:text-elephant-400 border-b border-gray-200 dark:border-gray-800 pb-2">1. Browsing Tables</h2>
+                        <p class="mb-4 leading-relaxed">The <strong class="text-gray-900 dark:text-white">Explorer</strong> sidebar on the left displays all public tables in your database. Click on any table to instantly view its schema and first 100 rows. The sidebar highlights the active table with a premium indicator, and automatically populates the SQL Editor with a simple <code>SELECT</code> query.</p>
+                        <div class="bg-gray-100 dark:bg-[#2d2d2d] rounded-lg p-4 font-mono text-sm border-l-4 border-elephant-500 border-gray-200 dark:border-gray-700 shadow-inner">
+                            SELECT * FROM users LIMIT 100;
+                        </div>
+                    </section>
+
+                    <section>
+                        <h2 class="text-xl font-semibold mb-4 mt-8 text-elephant-600 dark:text-elephant-400 border-b border-gray-200 dark:border-gray-800 pb-2">2. Writing & Executing Queries</h2>
+                        <p class="mb-4 leading-relaxed">The <strong class="text-gray-900 dark:text-white">Query Editor</strong> is fully featured with syntax highlighting and smart theming. You can run queries by clicking the <strong class="text-gray-900 dark:text-white">Run Query</strong> button or by pressing <kbd class="bg-gray-200 dark:bg-gray-700 px-2 py-1 rounded text-xs mx-1">Cmd/Ctrl + Enter</kbd>. The editor scales gracefully and results are presented in a responsive data grid.</p>
+                        <p class="mb-4 leading-relaxed">Errors are handled elegantly via toast notifications and detailed inline error states in the data grid, allowing you to debug SQL syntax issues instantly without losing context.</p>
+                    </section>
+
+                    <section>
+                        <h2 class="text-xl font-semibold mb-4 mt-8 text-elephant-600 dark:text-elephant-400 border-b border-gray-200 dark:border-gray-800 pb-2">3. Safe Mode & Reverting Data</h2>
+                        <p class="mb-4 leading-relaxed">When the <strong class="text-green-600 dark:text-green-400">Safe Mode</strong> checkbox is enabled, the GUI creates a microscopic snapshot of your database milliseconds before executing your query. If you accidentally execute a destructive query (like a <code>DELETE</code> without a <code>WHERE</code> clause), a <strong class="text-red-500">Revert</strong> button will appear in the toolbar.</p>
+                        <p class="mb-4 leading-relaxed italic text-sm text-gray-500 dark:text-gray-400">Note: Safe Mode uses `pg_dump` internally. For massive databases, Safe Mode might add a slight delay to query execution.</p>
+                    </section>
+
+                    <section>
+                        <h2 class="text-xl font-semibold mb-4 mt-8 text-elephant-600 dark:text-elephant-400 border-b border-gray-200 dark:border-gray-800 pb-2">4. Backups & Restoration</h2>
+                        <p class="mb-4 leading-relaxed">Use the icons in the far-left <strong class="text-gray-900 dark:text-white">Activity Bar</strong> to trigger backups. You can backup the entire database, or use the "Backup" button above the Editor to backup just the specific table you are currently viewing. You can choose between Plain Text (<code>.sql</code>) and Custom Binary (<code>.dump</code>) formats.</p>
+                        <p class="mb-4 leading-relaxed">To restore data, click the <i class="fas fa-upload mx-1 text-elephant-500"></i> icon. It accepts raw <code>.sql</code> and <code>.dump</code> files via file selection or intuitive drag-and-drop, providing immediate visual feedback upon attachment. Be careful—restoring data may overwrite existing tables depending on the backup's structure.</p>
+                    </section>
+
+                    <section>
+                        <h2 class="text-xl font-semibold mb-4 text-elephant-600 dark:text-elephant-400 border-b border-gray-200 dark:border-gray-800 pb-2">5. Limitations</h2>
+                        <ul class="list-disc pl-5 space-y-2 mb-4 text-gray-600 dark:text-gray-400">
+                            <li><strong class="text-gray-800 dark:text-gray-300">Foreign Keys & Reverting:</strong> The "Safe Mode Revert" feature drops the table before restoring it to prevent duplicate key errors. However, if the table is referenced by a Foreign Key from another table, PostgreSQL will reject the DROP command to protect the relationship, causing the revert to fail.</li>
+                            <li><strong class="text-gray-800 dark:text-gray-300">Large Databases:</strong> Backups and restores run synchronously within the HTTP request. If you attempt to dump/restore massive databases (e.g. multi-gigabyte), your browser or Node.js may time out the connection. For large databases, it is recommended to use the <code>.dump</code> custom binary format, which is compressed.</li>
+                            <li><strong class="text-gray-800 dark:text-gray-300">Query Limits:</strong> Unbounded queries (e.g. <code>SELECT * FROM giant_table</code>) will pull all rows into Node's memory. It is expected that developers write their own <code>LIMIT</code> clauses to avoid crashing the server.</li>
+                            <li><strong class="text-gray-800 dark:text-gray-300">Local Focus:</strong> The server binds to <code>127.0.0.1</code> by default. To expose it over a network, set the <code>HOST</code> environment variable explicitly.</li>
+                        </ul>
+                    </section>
+                    
+                    <section>
+                        <h2 class="text-xl font-semibold mb-4 text-elephant-600 dark:text-elephant-400 border-b border-gray-200 dark:border-gray-800 pb-2">6. Read-Only Access</h2>
+                        <p class="mb-4 leading-relaxed">If configured by the administrator, logging in with a <strong class="text-gray-900 dark:text-white">Read-Only password</strong> will restrict the interface to safe operations. You will only be able to execute <code>SELECT</code> queries. This is strictly enforced at the database transaction layer, ensuring destructive queries (like <code>INSERT</code>, <code>UPDATE</code>, <code>DELETE</code>, <code>DROP</code>) are impossible. Backup/Restore functionality will also be disabled.</p>
+                    </section>
+                    
+                    <section>
+                        <h2 class="text-xl font-semibold mb-4 text-elephant-600 dark:text-elephant-400 border-b border-gray-200 dark:border-gray-800 pb-2">7. Security & Rate Limiting</h2>
+                        <p class="mb-4 leading-relaxed">This GUI employs robust security measures including built-in CSRF protection. Login endpoints are rate-limited to 5 attempts per 15 minutes to prevent brute-force attacks, while query and backup operations are also limited to prevent resource exhaustion. Passwords are cryptographically hashed using `bcrypt`, and the application leverages `helmet` to set strict HTTP security headers.</p>
+                    </section>
+                </div>
+            </div>
+        </div>
+        
+    </div>
+
+
+    
+    <div id="restore-modal" class="hidden absolute inset-0 z-[100] flex items-center justify-center bg-gray-900/30 dark:bg-black/60 backdrop-blur-sm">
+        <div class="bg-white dark:bg-[#252526] border border-gray-200 dark:border-gray-700 rounded-lg shadow-2xl p-6 w-full max-w-md" role="dialog" aria-modal="true" aria-labelledby="restore-title">
+            <div class="flex justify-between items-center mb-4">
+                <h2 id="restore-title" class="text-lg font-semibold text-gray-900 dark:text-white">Restore Database / Table</h2>
+                <button id="close-modal" class="text-gray-500 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white transition-all active:scale-95 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-elephant-500 rounded p-1 disabled:opacity-50 disabled:cursor-not-allowed" aria-label="Close modal"><i class="fas fa-times"></i></button>
+            </div>
+            <p class="text-gray-600 dark:text-gray-400 text-sm mb-4">Select a .sql or .dump file to restore data. This action may overwrite existing data.</p>
+            
+            <div class="border-2 border-dashed border-gray-300 dark:border-gray-600 rounded-lg p-6 flex flex-col items-center justify-center mb-4 hover:border-elephant-500 dark:hover:border-elephant-500 hover:bg-elephant-50 dark:hover:bg-elephant-900/20 transition-colors bg-gray-50 dark:bg-[#1e1e1e] group cursor-pointer relative focus-within:ring-2 focus-within:ring-elephant-500 focus-within:outline-none">
+                <i class="fas fa-file-upload text-3xl text-gray-400 dark:text-gray-500 mb-2 group-hover:text-elephant-500 transition-colors"></i>
+                <input type="file" id="restore-file" accept=".sql,.dump" class="absolute inset-0 w-full h-full opacity-0 cursor-pointer" aria-label="Upload SQL or dump file" />
+                <span id="restore-file-name" class="text-sm text-gray-500 dark:text-gray-400 group-hover:text-elephant-600 dark:group-hover:text-elephant-400 transition-colors">Click or drag file here (.sql or .dump)</span>
+            </div>
+
+            <div class="text-red-500 dark:text-red-400 text-sm mb-4 hidden" id="restore-error"></div>
+            
+            <div id="restore-progress-container" class="hidden mb-4">
+                <div class="flex justify-between text-sm font-medium mb-1 text-gray-700 dark:text-gray-300">
+                    <span id="restore-progress-text">Uploading & Restoring...</span>
+                    <span id="restore-progress-percent">0%</span>
+                </div>
+                <div class="w-full bg-gray-200 dark:bg-gray-700 rounded-full h-2.5 overflow-hidden">
+                    <div id="restore-progress-bar" class="bg-elephant-600 h-2.5 rounded-full transition-all duration-300 ease-out" style="width: 0%"></div>
+                </div>
+            </div>
+            
+            <div class="flex justify-end gap-3" id="restore-actions">
+                <button id="cancel-restore" class="px-4 py-2 rounded text-sm font-medium text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white hover:bg-gray-100 dark:hover:bg-gray-800 transition-all active:scale-95 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-elephant-500 disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:bg-transparent dark:disabled:hover:bg-transparent">Cancel</button>
+                <button id="submit-restore" class="px-4 py-2 bg-elephant-600 hover:bg-elephant-700 text-white rounded text-sm font-medium transition-all active:scale-95 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-elephant-500 focus-visible:ring-offset-2 dark:focus-visible:ring-offset-[#252526] disabled:opacity-50 disabled:cursor-not-allowed">Upload & Restore</button>
+            </div>
+        </div>
+    </div>
+
+    
+    <div id="backup-modal" class="hidden absolute inset-0 z-[100] flex items-center justify-center bg-gray-900/30 dark:bg-black/60 backdrop-blur-sm">
+        <div class="bg-white dark:bg-[#252526] border border-gray-200 dark:border-gray-700 rounded-lg shadow-2xl p-6 w-full max-w-sm" role="dialog" aria-modal="true" aria-labelledby="backup-title">
+            <div class="flex justify-between items-center mb-4">
+                <h2 id="backup-title" class="text-lg font-semibold text-gray-900 dark:text-white">Download Backup</h2>
+                <button id="close-backup-modal" class="text-gray-500 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white transition-all active:scale-95 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-elephant-500 rounded p-1" aria-label="Close modal"><i class="fas fa-times"></i></button>
+            </div>
+            <p class="text-gray-600 dark:text-gray-400 text-sm mb-4">Select the format for your backup.</p>
+            
+            <div class="mb-6 space-y-3">
+                <label class="flex items-center gap-3 p-3 border border-gray-200 dark:border-gray-700 rounded cursor-pointer hover:bg-gray-50 dark:hover:bg-[#2a2d2e] transition-colors focus-within:ring-2 focus-within:ring-elephant-500">
+                    <input type="radio" name="backup-format" value="sql" checked class="text-elephant-600 focus:ring-elephant-500 dark:bg-gray-800 dark:border-gray-600">
+                    <div>
+                        <div class="text-sm font-medium text-gray-900 dark:text-white">Plain Text (.sql)</div>
+                        <div class="text-xs text-gray-500 dark:text-gray-400">Standard SQL script. Easily readable and editable.</div>
+                    </div>
+                </label>
+                <label class="flex items-center gap-3 p-3 border border-gray-200 dark:border-gray-700 rounded cursor-pointer hover:bg-gray-50 dark:hover:bg-[#2a2d2e] transition-colors focus-within:ring-2 focus-within:ring-elephant-500">
+                    <input type="radio" name="backup-format" value="dump" class="text-elephant-600 focus:ring-elephant-500 dark:bg-gray-800 dark:border-gray-600">
+                    <div>
+                        <div class="text-sm font-medium text-gray-900 dark:text-white">Custom Binary (.dump)</div>
+                        <div class="text-xs text-gray-500 dark:text-gray-400">Compressed archive. Best for pg_restore.</div>
+                    </div>
+                </label>
+            </div>
+            
+            <div class="flex justify-end gap-3">
+                <button id="cancel-backup" class="px-4 py-2 rounded text-sm font-medium text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white hover:bg-gray-100 dark:hover:bg-gray-800 transition-all active:scale-95 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-elephant-500">Cancel</button>
+                <button id="submit-backup" class="px-4 py-2 bg-elephant-600 hover:bg-elephant-700 text-white rounded text-sm font-medium transition-all active:scale-95 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-elephant-500 focus-visible:ring-offset-2 dark:focus-visible:ring-offset-[#252526]">Download Backup</button>
+            </div>
+        </div>
+    </div>
+    
+    <div id="toast-container" class="fixed bottom-4 right-4 z-[9999] flex flex-col gap-2 pointer-events-none"></div>
+
+    <script type="module" src="/js/app.js?v=10"></script>
+</body>
+</html>
