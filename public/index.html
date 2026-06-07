@@ -3,6 +3,14 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="color-scheme" content="light dark">
+    <script>
+        if (localStorage.theme === 'dark' || (!('theme' in localStorage) && window.matchMedia('(prefers-color-scheme: dark)').matches)) {
+            document.documentElement.classList.add('dark');
+        } else {
+            document.documentElement.classList.remove('dark');
+        }
+    </script>
     <title>PostgreSQL GUI</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.13/codemirror.min.css" integrity="sha384-zaeBlB/vwYsDRSlFajnDd7OydJ0cWk+c2OWybl3eSUf6hW2EbhlCsQPqKr3gkznT" crossorigin="anonymous">
     <link id="cm-theme" rel="stylesheet" href="">
@@ -22,12 +30,22 @@
                 scrollbar-width: none;
             }
         }
-        /* Custom scrollbar */
-        ::-webkit-scrollbar { width: 10px; height: 10px; }
-        ::-webkit-scrollbar-track { background: transparent; }
-        ::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 5px; }
+        :root {
+            scrollbar-color: #cbd5e1 transparent;
+            scrollbar-width: thin;
+        }
         @media (prefers-color-scheme: dark) {
-            ::-webkit-scrollbar-thumb { background: #4b5563; }
+            :root {
+                scrollbar-color: #4b5563 transparent;
+            }
+        }
+        @supports not (scrollbar-color: auto) {
+            ::-webkit-scrollbar { width: 10px; height: 10px; }
+            ::-webkit-scrollbar-track { background: transparent; }
+            ::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 5px; }
+            @media (prefers-color-scheme: dark) {
+                ::-webkit-scrollbar-thumb { background: #4b5563; }
+            }
         }
         
         /* CodeMirror Overrides */
@@ -36,6 +54,11 @@
             font-family: 'JetBrains Mono', ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace !important;
             font-size: 14px;
             background: transparent !important;
+        }
+
+        #btn-undo i {
+            transform: rotate(var(--undo-rotate, 0deg));
+            transition: var(--undo-transition, none);
         }
     </style>
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet" integrity="sha384-3B6NwesSXE7YJlcLI9RpRqGf2p/EgVH8BgoKTaUrmKNDkHPStTQ3EyoYjCGXaOTS" crossorigin="anonymous">
@@ -50,8 +73,8 @@
 <body class="bg-gray-50 dark:bg-[#1e1e1e] text-gray-800 dark:text-gray-300 font-sans h-[100dvh] w-screen overflow-hidden transition-colors duration-200">
 
     
-    <div id="login-screen" class="hidden absolute inset-0 z-50 flex items-center justify-center bg-gray-900/20 dark:bg-black/50 backdrop-blur-sm">
-        <div class="bg-white dark:bg-[#252526] border border-gray-200 dark:border-gray-700 rounded-lg shadow-2xl p-8 w-full max-w-sm">
+    <dialog id="login-screen" class="bg-white dark:bg-[#252526] border border-gray-200 dark:border-gray-700 rounded-lg shadow-2xl p-8 w-full max-w-sm backdrop:bg-gray-900/30 backdrop:dark:bg-black/60 backdrop:backdrop-blur-sm m-auto">
+        <div>
             <div class="flex items-center gap-3 mb-6 justify-center">
                 <i class="fas fa-database text-elephant-600 dark:text-elephant-500 text-2xl"></i>
                 <h2 class="text-xl font-semibold text-gray-900 dark:text-white">PostgreSQL GUI</h2>
@@ -61,7 +84,7 @@
             <div class="text-red-500 dark:text-red-400 text-sm mb-4 text-center" id="login-error"></div>
             
             <div class="space-y-4">
-                <input type="password" id="password-input" placeholder="Password..." class="w-full bg-gray-50 dark:bg-[#1e1e1e] border border-gray-300 dark:border-gray-600 rounded px-4 py-2 text-gray-900 dark:text-white focus:outline-none focus-visible:ring-2 focus-visible:ring-elephant-500 focus:border-elephant-500 dark:focus:border-elephant-500 transition-all" />
+                <input type="password" id="password-input" autocomplete="current-password" placeholder="Password..." class="w-full bg-gray-50 dark:bg-[#1e1e1e] border border-gray-300 dark:border-gray-600 rounded px-4 py-2 text-gray-900 dark:text-white focus:outline-none focus-visible:ring-2 focus-visible:ring-elephant-500 focus:border-elephant-500 dark:focus:border-elephant-500 transition-all" />
                 <button id="login-btn" class="w-full bg-elephant-600 hover:bg-elephant-700 text-white font-medium py-2 rounded transition-all active:scale-95 flex justify-center items-center gap-2 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-elephant-500 focus-visible:ring-offset-2 dark:focus-visible:ring-offset-[#252526]">
                     <span id="login-text">Login</span>
                     <i id="login-loader" class="fas fa-spinner fa-spin hidden"></i>
@@ -69,7 +92,7 @@
             </div>
 
         </div>
-    </div>
+    </dialog>
 
     
     <div id="app-screen" class="hidden h-full flex flex-col md:flex-row">
@@ -276,8 +299,8 @@
 
 
     
-    <div id="restore-modal" class="hidden absolute inset-0 z-[100] flex items-center justify-center bg-gray-900/30 dark:bg-black/60 backdrop-blur-sm">
-        <div class="bg-white dark:bg-[#252526] border border-gray-200 dark:border-gray-700 rounded-lg shadow-2xl p-6 w-full max-w-md" role="dialog" aria-modal="true" aria-labelledby="restore-title">
+    <dialog id="restore-modal" class="bg-white dark:bg-[#252526] border border-gray-200 dark:border-gray-700 rounded-lg shadow-2xl p-6 w-full max-w-md backdrop:bg-gray-900/30 backdrop:dark:bg-black/60 backdrop:backdrop-blur-sm m-auto" aria-labelledby="restore-title">
+        <div>
             <div class="flex justify-between items-center mb-4">
                 <h2 id="restore-title" class="text-lg font-semibold text-gray-900 dark:text-white">Restore Database / Table</h2>
                 <button id="close-modal" class="text-gray-500 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white transition-all active:scale-95 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-elephant-500 rounded p-1 disabled:opacity-50 disabled:cursor-not-allowed" aria-label="Close modal"><i class="fas fa-times"></i></button>
@@ -298,7 +321,7 @@
                     <span id="restore-progress-percent">0%</span>
                 </div>
                 <div class="w-full bg-gray-200 dark:bg-gray-700 rounded-full h-2.5 overflow-hidden">
-                    <div id="restore-progress-bar" class="bg-elephant-600 h-2.5 rounded-full transition-all duration-300 ease-out" style="width: 0%"></div>
+                    <div id="restore-progress-bar" class="bg-elephant-600 h-2.5 rounded-full transition-all duration-300 ease-out w-[var(--progress)]" style="--progress: 0%;"></div>
                 </div>
             </div>
             
@@ -307,11 +330,11 @@
                 <button id="submit-restore" class="px-4 py-2 bg-elephant-600 hover:bg-elephant-700 text-white rounded text-sm font-medium transition-all active:scale-95 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-elephant-500 focus-visible:ring-offset-2 dark:focus-visible:ring-offset-[#252526] disabled:opacity-50 disabled:cursor-not-allowed">Upload & Restore</button>
             </div>
         </div>
-    </div>
+    </dialog>
 
     
-    <div id="backup-modal" class="hidden absolute inset-0 z-[100] flex items-center justify-center bg-gray-900/30 dark:bg-black/60 backdrop-blur-sm">
-        <div class="bg-white dark:bg-[#252526] border border-gray-200 dark:border-gray-700 rounded-lg shadow-2xl p-6 w-full max-w-sm" role="dialog" aria-modal="true" aria-labelledby="backup-title">
+    <dialog id="backup-modal" class="bg-white dark:bg-[#252526] border border-gray-200 dark:border-gray-700 rounded-lg shadow-2xl p-6 w-full max-w-sm backdrop:bg-gray-900/30 backdrop:dark:bg-black/60 backdrop:backdrop-blur-sm m-auto text-gray-800 dark:text-gray-300" aria-labelledby="backup-title">
+        <div>
             <div class="flex justify-between items-center mb-4">
                 <h2 id="backup-title" class="text-lg font-semibold text-gray-900 dark:text-white">Download Backup</h2>
                 <button id="close-backup-modal" class="text-gray-500 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white transition-all active:scale-95 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-elephant-500 rounded p-1" aria-label="Close modal"><i class="fas fa-times"></i></button>
@@ -335,15 +358,17 @@
                 </label>
             </div>
             
+            <div class="text-red-500 dark:text-red-400 text-sm mb-4 hidden" id="backup-error"></div>
+
             <div class="flex justify-end gap-3">
                 <button id="cancel-backup" class="px-4 py-2 rounded text-sm font-medium text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white hover:bg-gray-100 dark:hover:bg-gray-800 transition-all active:scale-95 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-elephant-500">Cancel</button>
                 <button id="submit-backup" class="px-4 py-2 bg-elephant-600 hover:bg-elephant-700 text-white rounded text-sm font-medium transition-all active:scale-95 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-elephant-500 focus-visible:ring-offset-2 dark:focus-visible:ring-offset-[#252526]">Download Backup</button>
             </div>
         </div>
-    </div>
+    </dialog>
     
     <div id="toast-container" class="fixed bottom-4 right-4 z-[9999] flex flex-col gap-2 pointer-events-none"></div>
 
-    <script type="module" src="/js/app.js?v=10"></script>
+    <script type="module" src="/js/app.js"></script>
 </body>
 </html>

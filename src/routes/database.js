@@ -21,7 +21,7 @@ function createDatabaseRoutes({ queryExecutor, backupRestore, backupsDir, upload
     const backupLimiter = rateLimit({
         windowMs: 15 * 60 * 1000, 
         max: isTest ? 100 : 10,
-        message: { error: 'Too many backup/restore operations, please try again later' }
+        message: { error: 'Too many backup/restore operations, please try again after 15 minutes' }
     });
 
     router.get('/tables', async (req, res) => {

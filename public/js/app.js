@@ -155,12 +155,12 @@ if (btnMinimizeOutput && resultsPane) {
 }
 
 const showLogin = () => {
-    loginScreen.classList.remove('hidden');
+    loginScreen.showModal();
     appScreen.classList.add('hidden');
 };
 
 const showApp = () => {
-    loginScreen.classList.add('hidden');
+    loginScreen.close();
     appScreen.classList.remove('hidden');
     if (typeof queryEditor !== 'undefined') {
         setTimeout(() => queryEditor.refresh(), 10);
@@ -201,7 +201,13 @@ async function checkAuth() {
             const role = await getRole();
             const hideForReadonly = (id) => {
                 const el = document.getElementById(id);
-                if (el) el.style.display = role === 'readonly' ? 'none' : '';
+                if (el) {
+                    if (role === 'readonly') {
+                        el.classList.add('hidden');
+                    } else {
+                        el.classList.remove('hidden');
+                    }
+                }
             };
             hideForReadonly('btn-backup-db');
             hideForReadonly('btn-restore-db');

@@ -182,11 +182,11 @@ export function init({ getCurrentTable }) {
             editor.undo();
             const icon = btnUndo.querySelector('i');
             if (icon) {
-                icon.style.transition = 'transform 0.3s cubic-bezier(0.4, 0, 0.2, 1)';
-                icon.style.transform = 'rotate(-360deg)';
+                icon.style.setProperty('--undo-rotate', '-360deg');
+                icon.style.setProperty('--undo-transition', 'transform 0.3s cubic-bezier(0.4, 0, 0.2, 1)');
                 setTimeout(() => {
-                    icon.style.transition = 'none';
-                    icon.style.transform = 'rotate(0deg)';
+                    icon.style.setProperty('--undo-transition', 'none');
+                    icon.style.setProperty('--undo-rotate', '0deg');
                 }, 300);
             }
         });
