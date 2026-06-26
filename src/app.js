@@ -1,6 +1,4 @@
 const express = require('express');
-const cookieParser = require('cookie-parser');
-const helmet = require('helmet');
 const path = require('path');
 const fs = require('fs');
 
@@ -19,22 +17,20 @@ function createApp() {
     if (config.trustProxy) {
         app.set('trust proxy', 1);
     }    
-    app.use(helmet({
-        contentSecurityPolicy: {
-            directives: {
-                defaultSrc: ["'self'"],
-                scriptSrc: ["'self'", "https://cdn.tailwindcss.com", "https://cdnjs.cloudflare.com"],
-                styleSrc: ["'self'", "'unsafe-inline'", "https://fonts.googleapis.com", "https://cdnjs.cloudflare.com"],
-                fontSrc: ["https://fonts.gstatic.com", "https://cdnjs.cloudflare.com"],
-                connectSrc: ["'self'"],
-                frameAncestors: ["'none'"]
-            }
-        },
-        crossOriginResourcePolicy: { policy: "cross-origin" }
-    })); 
+    app.use((req, res, next) => {
+        res.setHeader('Content-Security-Policy', "default-src 'self'; script-src 'self' https://cdn.tailwindcss.com https://cdnjs.cloudflare.com; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com https://cdnjs.cloudflare.com; font-src https://fonts.gstatic.com https://cdnjs.cloudflare.com; connect-src 'self'; frame-ancestors 'none';");
+        res.setHeader('Cross-Origin-Resource-Policy', 'cross-origin');
+        res.setHeader('X-DNS-Prefetch-Control', 'off');
+        res.setHeader('X-Frame-Options', 'SAMEORIGIN');
+        res.setHeader('Strict-Transport-Security', 'max-age=15552000; includeSubDomains');
+        res.setHeader('X-Download-Options', 'noopen');
+        res.setHeader('X-Content-Type-Options', 'nosniff');
+        res.setHeader('X-XSS-Protection', '0');
+        res.setHeader('X-Permitted-Cross-Domain-Policies', 'none');
+        next();
+    }); 
     app.use(express.json());
     app.use(express.urlencoded({ extended: true }));
-    app.use(cookieParser());
     app.use(express.static(path.join(__dirname, '..', 'public')));
 
     

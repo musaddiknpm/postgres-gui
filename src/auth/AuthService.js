@@ -1,5 +1,5 @@
 const jwt = require('jsonwebtoken');
-const bcrypt = require('bcryptjs');
+const crypto = require('crypto');
 
 class AuthService {
     constructor(config) {
@@ -12,17 +12,22 @@ class AuthService {
     }
 
     async login(password) {
-        const isAdminMatch = await bcrypt.compare(password, this.adminPasswordHash);
-        if (isAdminMatch) {
+        const check = (pass, hashStr) => {
+            if (!hashStr || !hashStr.startsWith('scrypt:')) return false;
+            const [, salt, key] = hashStr.split(':');
+            const derivedKey = crypto.scryptSync(pass, salt, 64);
+            const keyBuffer = Buffer.from(key, 'hex');
+            if (derivedKey.length !== keyBuffer.length) return false;
+            return crypto.timingSafeEqual(keyBuffer, derivedKey);
+        };
+
+        if (check(password, this.adminPasswordHash)) {
             
             return jwt.sign({ role: 'admin' }, this.secret, { expiresIn: '24h' });
         }
 
-        if (this.readonlyPasswordHash) {
-            const isReadonlyMatch = await bcrypt.compare(password, this.readonlyPasswordHash);
-            if (isReadonlyMatch) {
-                return jwt.sign({ role: 'readonly' }, this.secret, { expiresIn: '24h' });
-            }
+        if (this.readonlyPasswordHash && check(password, this.readonlyPasswordHash)) {
+            return jwt.sign({ role: 'readonly' }, this.secret, { expiresIn: '24h' });
         }
 
         throw new Error('Invalid password');

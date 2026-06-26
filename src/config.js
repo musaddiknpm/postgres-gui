@@ -1,9 +1,13 @@
-require('dotenv').config();
 const os = require('os');
 const crypto = require('crypto');
 const fs = require('fs');
 const path = require('path');
-const bcrypt = require('bcryptjs');
+
+try {
+    process.loadEnvFile(path.resolve(process.cwd(), '.env'));
+} catch (e) {
+    // Ignore if .env doesn't exist or is already loaded
+}
 
 function autoHashPasswords() {
     const envPath = path.resolve(process.cwd(), '.env');
@@ -14,8 +18,10 @@ function autoHashPasswords() {
 
     const hashIfPlain = (key) => {
         const value = process.env[key];
-        if (value && !value.startsWith('$2a$') && !value.startsWith('$2b$') && !value.startsWith('$2y$')) {
-            const hash = bcrypt.hashSync(value, 10);
+        if (value && !value.startsWith('scrypt:') && !value.startsWith('$2a$') && !value.startsWith('$2b$') && !value.startsWith('$2y$')) {
+            const salt = crypto.randomBytes(16).toString('hex');
+            const derivedKey = crypto.scryptSync(value, salt, 64).toString('hex');
+            const hash = `scrypt:${salt}:${derivedKey}`;
             process.env[key] = hash;
             
             let found = false;

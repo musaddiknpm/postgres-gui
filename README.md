@@ -3,7 +3,7 @@ By [musaddiknpm](https://github.com/musaddiknpm)
 
 A lightweight, self-hosted web GUI for managing PostgreSQL databases. Browse tables, execute SQL queries, and backup/restore your data — all from a clean browser interface.
 
-![Node.js](https://img.shields.io/badge/Node.js-18+-green)
+![Node.js](https://img.shields.io/badge/Node.js-20.6+-green)
 ![PostgreSQL](https://img.shields.io/badge/PostgreSQL-12+-blue)
 ![License](https://img.shields.io/badge/license-MIT-lightgrey)
 
@@ -17,7 +17,7 @@ A lightweight, self-hosted web GUI for managing PostgreSQL databases. Browse tab
 
 ## Prerequisites
 
-- [Node.js](https://nodejs.org/) 18+
+- [Node.js](https://nodejs.org/) 20.6+
 - [PostgreSQL](https://www.postgresql.org/) 12+ (with `pg_dump` and `psql` in your PATH)
 
 ## Setup
@@ -88,9 +88,9 @@ DATABASE_URL=postgres://user:password@remote.host.com:5432/dbname?sslmode=requir
 
 This tool implements several security best practices out-of-the-box:
 - **Rate Limiting**: Login endpoints are protected against brute-force attacks (max 5 attempts per 15 minutes). Resource-intensive endpoints like database queries and backup/restore operations are also rate-limited to prevent abuse.
-- **Helmet Headers**: Adds HTTP headers that protect against common web vulnerabilities (XSS, clickjacking, etc).
+- **Native Security Headers**: Custom middleware adds HTTP headers that protect against common web vulnerabilities (XSS, clickjacking, etc) without external dependencies.
 - **CSRF Protection**: All state-modifying API endpoints require a custom `X-Requested-With` header, preventing Cross-Site Request Forgery by utilizing browser-enforced CORS policies.
-- **Bcrypt Hashing**: Passwords are mathematically hashed, never stored or compared in plain text.
+- **Scrypt Hashing**: Passwords are mathematically hashed using Node.js native `crypto.scryptSync`, never stored or compared in plain text.
 - **Strict JWT**: Authentication tokens are HTTP-only, secure (in production), and strictly scoped by role.
 - **Role-Based Access Control**: Granular control via read-only profiles. Read-only queries are strictly enforced at the database layer using `BEGIN READ ONLY` transactions to absolutely prevent any data modification.
 

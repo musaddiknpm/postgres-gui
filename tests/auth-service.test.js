@@ -3,7 +3,7 @@ import AuthService from '../src/auth/AuthService.js';
 
 const validConfig = {
     jwtSecret: 'test-secret',
-    adminPassword: '$2b$10$/EfmNSchUFfjvdyVAASc1ePgHGWva2N6RvFFoesCoOsvxtI8/n1TK', 
+    adminPassword: 'scrypt:1861bcf3c00e2e15f94281bc1973b3b3:bf2ab0e72a532bf88c2adc75cb60c6f50ea730e7c60a9c7c46d533a31f9833ab5955df65af707db99f206a70f5179704470a5dff2e292d64c42d37c0fb52e487', 
 };
 
 describe('AuthService', () => {
@@ -67,7 +67,7 @@ describe('AuthService', () => {
         it('throws for a token signed with a different secret', async () => {
             const otherAuth = new AuthService({
                 jwtSecret: 'different-secret',
-                adminPassword: '$2b$10$/EfmNSchUFfjvdyVAASc1ePgHGWva2N6RvFFoesCoOsvxtI8/n1TK',
+                adminPassword: 'scrypt:1861bcf3c00e2e15f94281bc1973b3b3:bf2ab0e72a532bf88c2adc75cb60c6f50ea730e7c60a9c7c46d533a31f9833ab5955df65af707db99f206a70f5179704470a5dff2e292d64c42d37c0fb52e487',
             });
             const token = await otherAuth.login('correct-password');
             expect(() => auth.verify(token))
