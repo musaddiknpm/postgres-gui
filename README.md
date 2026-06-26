@@ -63,6 +63,7 @@ All configuration is done via environment variables in `.env`:
 | `PGDATABASE` | No | `postgres` | Database name |
 | `SSL_KEY_PATH` | No | — | Path to SSL private key (e.g. `./ssl/privkey.pem`) |
 | `SSL_CERT_PATH` | No | — | Path to SSL certificate (e.g. `./ssl/fullchain.pem`) |
+| `TRUST_PROXY` | No | `false` | Set to `true` if deploying behind a trusted reverse proxy (e.g., Nginx, ALB) so rate limiters can correctly identify client IPs. |
 
 ### Connecting to PostgreSQL
 
@@ -106,7 +107,7 @@ SSL_CERT_PATH=./ssl/fullchain.pem
 The server will automatically detect these and start an `https://` server instead of HTTP.
 
 ### Option B: Nginx Reverse Proxy
-If using Nginx, leave the Node.js server running on HTTP (binding to `127.0.0.1`), and use Nginx to handle SSL and proxy the requests:
+If using Nginx, leave the Node.js server running on HTTP (binding to `127.0.0.1`), and use Nginx to handle SSL and proxy the requests. Make sure to set `TRUST_PROXY=true` in your `.env` file to correctly pass client IPs to the rate limiter:
 ```nginx
 server {
     listen 443 ssl;
@@ -126,7 +127,7 @@ server {
 ```
 
 ### Option C: Apache Reverse Proxy
-For Apache, enable `mod_proxy` and `mod_proxy_http`, then configure your VirtualHost:
+For Apache, enable `mod_proxy` and `mod_proxy_http`, set `TRUST_PROXY=true` in your `.env`, then configure your VirtualHost:
 ```apache
 <VirtualHost *:443>
     ServerName db.yourdomain.com

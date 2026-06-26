@@ -39,7 +39,12 @@ function createDatabaseRoutes({ queryExecutor, backupRestore, backupsDir, upload
         if (!sql) return res.status(400).json({ error: 'SQL query is required' });
 
         if (req.user && req.user.role === 'readonly') {
-            if (/(^\s*|;\s*)(commit|rollback|begin|start|abort|set|end)\b|\bset_config\b/i.test(sql)) {
+            let stripped = sql.replace(/'(?:[^']|'')*'/g, '')
+                              .replace(/"(?:[^"]|"")*"/g, '')
+                              .replace(/\$[a-zA-Z0-9_]*\$[\s\S]*?\$[a-zA-Z0-9_]*\$/g, '')
+                              .replace(/\/\*[\s\S]*?\*\//g, '')
+                              .replace(/--.*$/gm, '');
+            if (/(?:^|;)\s*(commit|rollback|begin|start|abort|set|end)\b|\bset_config\b/i.test(stripped)) {
                 return res.status(403).json({ error: 'Read-only role cannot execute transaction control or configuration modification statements.' });
             }
         }

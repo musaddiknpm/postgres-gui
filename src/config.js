@@ -90,6 +90,7 @@ const config = {
     appHost: optional('HOST', '127.0.0.1'),
     sslKeyPath: optional('SSL_KEY_PATH', ''),
     sslCertPath: optional('SSL_CERT_PATH', ''),
+    trustProxy: optional('TRUST_PROXY', 'false') === 'true',
 
     auth: Object.freeze({
         jwtSecret: optional('JWT_SECRET', crypto.randomBytes(32).toString('hex')),
