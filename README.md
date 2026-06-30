@@ -11,6 +11,9 @@ A lightweight, self-hosted web GUI for managing PostgreSQL databases. Browse tab
 
 - **Dashboard** — Clean, responsive full-screen grid view of all your database tables
 - **SQL Editor & Table Viewer** — Dedicated workspaces for writing custom queries and viewing spreadsheet-like data without clutter
+- **VS Code-Style Autocomplete** — Write SQL quickly with real-time, context-aware autocomplete that suggests your database's actual table names
+- **Interactive Data Grid** — Navigate massive datasets seamlessly using a highly optimized virtualized scroll grid with native `sticky` headers
+- **Cell Viewer Modal** — Click any table cell to inspect full un-truncated data and copy large text or JSON payloads with a single click
 - **Backup** — Download full database or single-table `.sql` or `.dump` archives
 - **Restore** — Upload `.sql` or `.dump` files to restore data
 - **Authentication** — Password-protected access with JWT tokens

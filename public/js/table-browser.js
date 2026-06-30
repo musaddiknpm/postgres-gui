@@ -82,16 +82,11 @@ export function init({ onTableSelected }) {
     }
 
     return {
-                async loadTables() {
+        async loadTables() {
             return await handleLoadTables();
         },
-
-        getCurrentTable() {
-            return currentTable;
-        },
-
-        getAllTables() {
-            return allTables;
-        }
+        getCurrentTable: () => currentTable,
+        getAllTables: () => allTables,
+        refresh: handleLoadTables
     };
 }

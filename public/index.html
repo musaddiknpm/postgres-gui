@@ -13,6 +13,7 @@
     </script>
     <title>PostgreSQL GUI</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.13/codemirror.min.css" integrity="sha384-zaeBlB/vwYsDRSlFajnDd7OydJ0cWk+c2OWybl3eSUf6hW2EbhlCsQPqKr3gkznT" crossorigin="anonymous">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.13/addon/hint/show-hint.min.css" crossorigin="anonymous">
     <link id="cm-theme" rel="stylesheet" href="">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -68,6 +69,8 @@
 
     
     <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.13/codemirror.min.js" integrity="sha384-uTzi9PU3axyLeKbgCPqQdNFT5Q23BRgFbmtrolYC7ROlbWVv7IggV+3r0ALSQd/s" crossorigin="anonymous"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.13/addon/hint/show-hint.min.js" crossorigin="anonymous"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.13/addon/hint/sql-hint.min.js" crossorigin="anonymous"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.13/mode/sql/sql.min.js" integrity="sha384-HxXmA1hLc56V6Ja4yfcCwAprmbnS4tuvKYS0qKG3t6oxOFMflcnYq5fOnt6wVCda" crossorigin="anonymous"></script>
 </head>
 <body class="bg-gray-50 dark:bg-[#1e1e1e] text-gray-800 dark:text-gray-300 font-sans h-[100dvh] w-screen overflow-hidden transition-colors duration-200">
@@ -261,16 +264,15 @@
 
                 <div class="space-y-12">
                     <section>
-                        <h2 class="text-xl font-semibold mb-4 text-elephant-600 dark:text-elephant-400 border-b border-gray-200 dark:border-gray-800 pb-2">1. Browsing Tables</h2>
-                        <p class="mb-4 leading-relaxed">The <strong class="text-gray-900 dark:text-white">Dashboard</strong> home screen displays all public tables in your database as a responsive grid. Click <strong>View</strong> on any table card to instantly open the Table Viewer and see the first 100 rows, or click <strong>Query</strong> to open the SQL Editor pre-populated with a <code>SELECT</code> query.</p>
-                        <div class="bg-gray-100 dark:bg-[#2d2d2d] rounded-lg p-4 font-mono text-sm border-l-4 border-elephant-500 border-gray-200 dark:border-gray-700 shadow-inner">
-                            SELECT * FROM users LIMIT 100;
-                        </div>
+                        <h2 class="text-xl font-semibold mb-4 text-elephant-600 dark:text-elephant-400 border-b border-gray-200 dark:border-gray-800 pb-2">1. Browsing Tables & Data Grid</h2>
+                        <p class="mb-4 leading-relaxed">The <strong class="text-gray-900 dark:text-white">Dashboard</strong> home screen displays all public tables in your database as a responsive grid. Click <strong>View</strong> on any table card to instantly open the Table Viewer and see the data.</p>
+                        <p class="mb-4 leading-relaxed">The <strong class="text-gray-900 dark:text-white">Data Grid</strong> uses a highly optimized virtualized scroll layout allowing you to fetch up to 1000+ rows instantly. Use the dropdown in the toolbar to change the row limit. If a cell contains large JSON or text that is truncated, simply <strong>Click the Cell</strong> to open the <strong class="text-gray-900 dark:text-white">Cell Viewer Modal</strong>, where you can inspect the full content and easily copy it to your clipboard.</p>
                     </section>
 
                     <section>
                         <h2 class="text-xl font-semibold mb-4 mt-8 text-elephant-600 dark:text-elephant-400 border-b border-gray-200 dark:border-gray-800 pb-2">2. Writing & Executing Queries</h2>
-                        <p class="mb-4 leading-relaxed">The <strong class="text-gray-900 dark:text-white">Query Editor</strong> is fully featured with syntax highlighting and smart theming. You can run queries by clicking the <strong class="text-gray-900 dark:text-white">Run Query</strong> button or by pressing <kbd class="bg-gray-200 dark:bg-gray-700 px-2 py-1 rounded text-xs mx-1">Cmd/Ctrl + Enter</kbd>. The editor scales gracefully and results are presented in a responsive data grid.</p>
+                        <p class="mb-4 leading-relaxed">The <strong class="text-gray-900 dark:text-white">Query Editor</strong> is fully featured with syntax highlighting and smart theming. It includes <strong>VS Code-style Autocomplete</strong> that automatically suggests SQL keywords and injects your database's actual table names as you type. You can also manually trigger autocomplete using <kbd class="bg-gray-200 dark:bg-gray-700 px-2 py-1 rounded text-xs mx-1">Ctrl + Space</kbd>.</p>
+                        <p class="mb-4 leading-relaxed">You can run queries by clicking the <strong class="text-gray-900 dark:text-white">Run Query</strong> button or by pressing <kbd class="bg-gray-200 dark:bg-gray-700 px-2 py-1 rounded text-xs mx-1">Cmd/Ctrl + Enter</kbd>. The editor scales gracefully and you can drag the resizer to adjust its height.</p>
                         <p class="mb-4 leading-relaxed">Errors are handled elegantly via toast notifications and detailed inline error states in the data grid, allowing you to debug SQL syntax issues instantly without losing context.</p>
                     </section>
 

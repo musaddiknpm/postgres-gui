@@ -162,7 +162,8 @@ const showApp = () => {
 
 
 const queryEditor = initQueryEditor({
-    getCurrentTable: () => tableBrowser.getCurrentTable()
+    getCurrentTable: () => tableBrowser.getCurrentTable(),
+    getAllTables: () => tableBrowser.getAllTables()
 });
 
 

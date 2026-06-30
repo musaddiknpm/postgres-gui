@@ -101,7 +101,7 @@ function renderResults(resultsWrapper, data) {
     resultsWrapper.addEventListener('scroll', currentScrollHandler);
 }
 
-export function init({ getCurrentTable }) {
+export function init({ getCurrentTable, getAllTables }) {
     const sqlInput = document.getElementById('sql-input');
     const btnRunQuery = document.getElementById('btn-run-query');
     const resultsWrapper = document.getElementById('results-wrapper');
@@ -228,7 +228,23 @@ export function init({ getCurrentTable }) {
     
     editor.setOption("extraKeys", {
         "Cmd-Enter": function(cm) { runQuery(); },
-        "Ctrl-Enter": function(cm) { runQuery(); }
+        "Ctrl-Enter": function(cm) { runQuery(); },
+        "Ctrl-Space": "autocomplete"
+    });
+
+    editor.on("inputRead", function(cm, change) {
+        if (!cm.state.completionActive && change.text[0].match(/^[a-zA-Z_0-9]$/)) {
+            let tablesObj = {};
+            if (getAllTables) {
+                const tables = getAllTables() || [];
+                tables.forEach(t => tablesObj[t] = []);
+            }
+            cm.setOption("hintOptions", {
+                tables: tablesObj,
+                completeSingle: false
+            });
+            CodeMirror.commands.autocomplete(cm, null, { completeSingle: false });
+        }
     });
 
     const cellViewerModal = document.getElementById('cell-viewer-modal');
