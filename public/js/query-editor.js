@@ -19,24 +19,19 @@ function renderResults(resultsWrapper, data) {
     const OVERSCROLL_ROWS = 20; 
 
     resultsWrapper.innerHTML = `
-        <div class="flex flex-col h-full w-full relative">
-            <div id="header-container" class="overflow-hidden shrink-0 bg-gray-100 dark:bg-[#2d2d2d] border-b border-gray-200 dark:border-gray-700 z-10 sticky top-0">
-                <table class="text-sm text-left border-collapse" style="table-layout: fixed;">
-                    <thead class="text-gray-700 dark:text-gray-300">
-                        <tr id="table-header-row"></tr>
-                    </thead>
-                </table>
-            </div>
-            <div id="body-container" class="flex-1 overflow-auto">
-                <div id="scroll-spacer" style="position: relative; min-width: max-content;">
-                    <div id="viewport" style="position: absolute; top: 0; left: 0; width: 100%;"></div>
-                </div>
-            </div>
+        <div id="header-container" class="sticky top-0 z-10 bg-gray-100 dark:bg-[#2d2d2d] border-b border-gray-200 dark:border-gray-700 w-max min-w-full">
+            <table class="text-sm text-left border-collapse" style="table-layout: fixed;">
+                <thead class="text-gray-700 dark:text-gray-300">
+                    <tr id="table-header-row"></tr>
+                </thead>
+            </table>
+        </div>
+        <div id="scroll-spacer" style="position: relative; min-width: max-content;">
+            <div id="viewport" style="position: absolute; top: 0; left: 0; min-width: 100%;"></div>
         </div>
     `;
 
     const headerContainer = resultsWrapper.querySelector('#header-container');
-    const bodyContainer = resultsWrapper.querySelector('#body-container');
     const scrollSpacer = resultsWrapper.querySelector('#scroll-spacer');
     const viewport = resultsWrapper.querySelector('#viewport');
     const headerRow = resultsWrapper.querySelector('#table-header-row');
@@ -50,7 +45,6 @@ function renderResults(resultsWrapper, data) {
     });
     headerRow.innerHTML = headerHtml;
     
-    // Set width of header table to match body precisely
     headerContainer.querySelector('table').style.width = `${data.fields.length * 200}px`;
 
     function drawChunk(scrollTop) {
@@ -98,15 +92,13 @@ function renderResults(resultsWrapper, data) {
 
     let scrollTimeout;
     currentScrollHandler = () => {
-        headerContainer.scrollLeft = bodyContainer.scrollLeft;
-        
         if (scrollTimeout) cancelAnimationFrame(scrollTimeout);
         scrollTimeout = requestAnimationFrame(() => {
-            drawChunk(bodyContainer.scrollTop);
+            drawChunk(resultsWrapper.scrollTop);
         });
     };
 
-    bodyContainer.addEventListener('scroll', currentScrollHandler);
+    resultsWrapper.addEventListener('scroll', currentScrollHandler);
 }
 
 export function init({ getCurrentTable }) {
