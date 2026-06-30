@@ -58,83 +58,76 @@ const loginScreen = document.getElementById('login-screen');
 const appScreen = document.getElementById('app-screen');
 
 
-const btnExplorer = document.getElementById('btn-explorer');
+const btnDashboard = document.getElementById('btn-dashboard');
+const btnSqlEditor = document.getElementById('btn-sql-editor');
 const btnGuide = document.getElementById('btn-guide');
+const dashboardWorkspace = document.getElementById('dashboard-workspace');
 const mainWorkspace = document.getElementById('main-workspace');
 const guideWorkspace = document.getElementById('guide-workspace');
-const explorerSidebar = document.getElementById('explorer-sidebar');
+const queryEditorSection = document.getElementById('query-editor-section');
+const editorTabLabel = document.getElementById('editor-tab-label');
 const resultsPane = document.getElementById('results-pane');
 const btnMinimizeOutput = document.getElementById('btn-minimize-output');
+const verticalResizer = document.getElementById('vertical-resizer');
 
-let currentWorkspace = 'explorer';
+let currentWorkspace = 'dashboard';
 
-function activateWorkspace(workspace) {
-    if (workspace === 'explorer') {
-        if (currentWorkspace === 'explorer' && !guideWorkspace.classList.contains('flex')) {
-
-            if (explorerSidebar.classList.contains('hidden')) {
-                explorerSidebar.classList.remove('hidden');
-                explorerSidebar.classList.add('flex');
-            } else {
-                explorerSidebar.classList.add('hidden');
-                explorerSidebar.classList.remove('flex');
-            }
+function activateWorkspace(workspace, mode = 'query') {
+    const isDashboard = workspace === 'dashboard';
+    const isSql = workspace === 'sql';
+    const isGuide = workspace === 'guide';
+    
+    dashboardWorkspace.classList.toggle('hidden', !isDashboard);
+    dashboardWorkspace.classList.toggle('flex', isDashboard);
+    
+    mainWorkspace.classList.toggle('hidden', !isSql);
+    mainWorkspace.classList.toggle('flex', isSql);
+    
+    guideWorkspace.classList.toggle('hidden', !isGuide);
+    guideWorkspace.classList.toggle('flex', isGuide);
+    
+    btnDashboard.classList.toggle('text-elephant-600', isDashboard);
+    btnDashboard.classList.toggle('dark:text-elephant-500', isDashboard);
+    btnDashboard.classList.toggle('text-gray-500', !isDashboard);
+    btnDashboard.classList.toggle('dark:text-gray-500', !isDashboard);
+    
+    btnSqlEditor.classList.toggle('text-elephant-600', isSql);
+    btnSqlEditor.classList.toggle('dark:text-elephant-500', isSql);
+    btnSqlEditor.classList.toggle('text-gray-500', !isSql);
+    btnSqlEditor.classList.toggle('dark:text-gray-500', !isSql);
+    
+    btnGuide.classList.toggle('text-elephant-600', isGuide);
+    btnGuide.classList.toggle('dark:text-elephant-500', isGuide);
+    btnGuide.classList.toggle('text-gray-500', !isGuide);
+    btnGuide.classList.toggle('dark:text-gray-500', !isGuide);
+    
+    if (isSql) {
+        if (mode === 'view') {
+            queryEditorSection.classList.add('hidden');
+            resultsPane.classList.remove('h-1/2');
+            resultsPane.classList.add('flex-1');
+            if (btnMinimizeOutput) btnMinimizeOutput.classList.add('hidden');
+            if (verticalResizer) verticalResizer.classList.add('hidden');
+            editorTabLabel.innerText = 'Table Viewer';
         } else {
-            mainWorkspace.classList.remove('hidden');
-            mainWorkspace.classList.add('flex');
-            guideWorkspace.classList.add('hidden');
-            guideWorkspace.classList.remove('flex');
-            explorerSidebar.classList.remove('hidden');
-            explorerSidebar.classList.add('flex');
-            
-            btnExplorer.classList.add('text-elephant-600', 'dark:text-elephant-500');
-            btnExplorer.classList.remove('text-gray-500', 'dark:text-gray-500');
-            btnGuide.classList.add('text-gray-500', 'dark:text-gray-500');
-            btnGuide.classList.remove('text-elephant-600', 'dark:text-elephant-500');
+            queryEditorSection.classList.remove('hidden');
+            resultsPane.classList.remove('flex-1');
+            resultsPane.classList.add('h-1/2');
+            if (btnMinimizeOutput) btnMinimizeOutput.classList.remove('hidden');
+            if (verticalResizer) verticalResizer.classList.remove('hidden');
+            editorTabLabel.innerText = 'Query Editor';
         }
-        currentWorkspace = 'explorer';
-        
-
-        if (typeof window.queryEditor !== 'undefined') window.queryEditor.refresh();
-        
-    } else {
-        mainWorkspace.classList.add('hidden');
-        mainWorkspace.classList.remove('flex');
-        guideWorkspace.classList.remove('hidden');
-        guideWorkspace.classList.add('flex');
-        explorerSidebar.classList.add('hidden');
-        explorerSidebar.classList.remove('flex');
-        
-        btnExplorer.classList.remove('text-elephant-600', 'dark:text-elephant-500');
-        btnExplorer.classList.add('text-gray-500', 'dark:text-gray-500');
-        btnGuide.classList.remove('text-gray-500', 'dark:text-gray-500');
-        btnGuide.classList.add('text-elephant-600', 'dark:text-elephant-500');
-        
-        currentWorkspace = 'guide';
+        if (typeof window.queryEditor !== 'undefined') {
+            setTimeout(() => window.queryEditor.refresh(), 10);
+        }
     }
+    
+    currentWorkspace = workspace;
 }
 
-btnExplorer.addEventListener('click', () => activateWorkspace('explorer'));
+btnDashboard.addEventListener('click', () => activateWorkspace('dashboard'));
+btnSqlEditor.addEventListener('click', () => activateWorkspace('sql', 'query'));
 btnGuide.addEventListener('click', () => activateWorkspace('guide'));
-
-const btnMinimizeExplorer = document.getElementById('btn-minimize-explorer');
-if (btnMinimizeExplorer && explorerSidebar) {
-    let explorerMinimized = false;
-    btnMinimizeExplorer.addEventListener('click', () => {
-        if (!explorerMinimized) {
-            explorerSidebar.classList.remove('h-64');
-            explorerSidebar.style.height = '40px';
-            btnMinimizeExplorer.classList.replace('fa-chevron-up', 'fa-chevron-down');
-            explorerMinimized = true;
-        } else {
-            explorerSidebar.style.height = '';
-            explorerSidebar.classList.add('h-64');
-            btnMinimizeExplorer.classList.replace('fa-chevron-down', 'fa-chevron-up');
-            explorerMinimized = false;
-        }
-        if (typeof window.queryEditor !== 'undefined') window.queryEditor.refresh();
-    });
-}
 
 
 if (btnMinimizeOutput && resultsPane) {
@@ -176,9 +169,14 @@ const queryEditor = initQueryEditor({
 window.queryEditor = queryEditor;
 
 const tableBrowser = initTableBrowser({
-    onTableSelected(table) {
+    onTableSelected(table, mode) {
         queryEditor.setQuery(`SELECT * FROM ${table} LIMIT 100;`);
-        queryEditor.runQuery();
+        if (mode === 'view') {
+            activateWorkspace('sql', 'view');
+            queryEditor.runQuery();
+        } else {
+            activateWorkspace('sql', 'query');
+        }
     },
 });
 

@@ -10,37 +10,55 @@ export function init({ onTableSelected }) {
     let allTables = [];
 
     function renderTables(tables) {
-        tablesList.innerHTML = '';
+        const grid = document.getElementById('dashboard-tables-grid');
+        grid.innerHTML = '';
         if (tables.length === 0) {
-            tablesList.innerHTML = `
-                <li class="px-4 py-8 text-center text-gray-500 dark:text-gray-400">
-                    <i class="fas fa-database text-3xl mb-3 text-gray-300 dark:text-gray-600 opacity-50"></i>
-                    <p class="text-sm font-medium">No tables found</p>
-                    <p class="text-xs mt-1 opacity-75">This database is empty</p>
-                </li>
+            grid.innerHTML = `
+                <div class="col-span-full py-12 text-center text-gray-500 dark:text-gray-400 bg-white dark:bg-[#252526] rounded-xl border border-gray-200 dark:border-gray-800">
+                    <i class="fas fa-database text-4xl mb-4 text-gray-300 dark:text-gray-600"></i>
+                    <p class="text-lg font-medium text-gray-900 dark:text-white">No tables found</p>
+                    <p class="text-sm mt-1">This database is empty</p>
+                </div>
             `;
             return;
         }
         tables.forEach(table => {
-            const li = document.createElement('li');
-            li.className = "group px-4 py-1.5 cursor-pointer text-sm flex items-center gap-2 text-gray-700 dark:text-gray-300 transition-all border-l-2 border-transparent hover:bg-gray-100 dark:hover:bg-[#2a2d2e] hover:border-elephant-400 dark:hover:border-elephant-500";
-            li.innerHTML = `<i class="fas fa-table text-elephant-500/60 dark:text-elephant-400/60 group-hover:text-elephant-600 dark:group-hover:text-elephant-400 transition-colors text-xs"></i> <span class="truncate">${escapeHTML(table)}</span>`;
-            li.addEventListener('click', () => {
-                document.querySelectorAll('#tables-list li').forEach(el => {
-                    el.classList.remove('bg-gray-200', 'dark:bg-[#37373d]', 'text-black', 'dark:text-white', 'border-elephant-600', 'dark:border-elephant-500');
-                    el.classList.add('border-transparent');
-                });
-                li.classList.remove('border-transparent');
-                li.classList.add('bg-gray-200', 'dark:bg-[#37373d]', 'text-black', 'dark:text-white', 'border-elephant-600', 'dark:border-elephant-500');
-
+            const card = document.createElement('div');
+            card.className = "bg-white dark:bg-[#252526] border border-gray-200 dark:border-gray-800 rounded-xl p-5 hover:shadow-md transition-all hover:border-elephant-400 dark:hover:border-elephant-500 group flex flex-col";
+            card.innerHTML = `
+                <div class="flex items-center gap-3 mb-5">
+                    <div class="w-10 h-10 rounded-lg bg-elephant-50 dark:bg-elephant-900/30 flex items-center justify-center text-elephant-600 dark:text-elephant-400 group-hover:scale-110 transition-transform shrink-0">
+                        <i class="fas fa-table"></i>
+                    </div>
+                    <h3 class="font-semibold text-gray-900 dark:text-white truncate flex-1 text-lg" title="${escapeHTML(table)}">${escapeHTML(table)}</h3>
+                </div>
+                <div class="flex items-center gap-2 mt-auto">
+                    <button class="btn-view-data flex-1 px-3 py-2 bg-gray-100 hover:bg-gray-200 dark:bg-[#333] dark:hover:bg-[#444] text-gray-800 dark:text-gray-200 text-sm font-medium rounded-lg transition-colors flex items-center justify-center gap-2 active:scale-95">
+                        <i class="fas fa-eye"></i> View
+                    </button>
+                    <button class="btn-run-query flex-1 px-3 py-2 bg-elephant-600 hover:bg-elephant-700 text-white text-sm font-medium rounded-lg transition-colors flex items-center justify-center gap-2 active:scale-95">
+                        <i class="fas fa-terminal"></i> Query
+                    </button>
+                </div>
+            `;
+            
+            card.querySelector('.btn-view-data').addEventListener('click', () => {
                 currentTable = table;
+                currentTableLabel.innerText = table;
                 tableActions.classList.remove('hidden');
                 tableActions.classList.add('flex');
-                currentTableLabel.innerText = table;
-
-                if (onTableSelected) onTableSelected(table);
+                if (onTableSelected) onTableSelected(table, 'view');
             });
-            tablesList.appendChild(li);
+
+            card.querySelector('.btn-run-query').addEventListener('click', () => {
+                currentTable = table;
+                currentTableLabel.innerText = table;
+                tableActions.classList.remove('hidden');
+                tableActions.classList.add('flex');
+                if (onTableSelected) onTableSelected(table, 'query');
+            });
+
+            grid.appendChild(card);
         });
     }
 

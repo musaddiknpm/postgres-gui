@@ -9,8 +9,8 @@ A lightweight, self-hosted web GUI for managing PostgreSQL databases. Browse tab
 
 ## Features
 
-- **SQL Editor** — Write and execute queries with Ctrl/Cmd+Enter
-- **Table Browser** — Click any table to browse its contents
+- **Dashboard** — Clean, responsive full-screen grid view of all your database tables
+- **SQL Editor & Table Viewer** — Dedicated workspaces for writing custom queries and viewing spreadsheet-like data without clutter
 - **Backup** — Download full database or single-table `.sql` or `.dump` archives
 - **Restore** — Upload `.sql` or `.dump` files to restore data
 - **Authentication** — Password-protected access with JWT tokens
@@ -158,7 +158,6 @@ src/
   routes/database.js
 public/
   index.html
-  css/style.css
   js/
     app.js
     api-client.js
