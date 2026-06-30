@@ -170,7 +170,11 @@ window.queryEditor = queryEditor;
 
 const tableBrowser = initTableBrowser({
     onTableSelected(table, mode) {
-        queryEditor.setQuery(`SELECT * FROM ${table} LIMIT 100;`);
+        const rowLimitSelect = document.getElementById('row-limit-select');
+        const limit = rowLimitSelect ? rowLimitSelect.value : '100';
+        const limitClause = limit === 'all' ? '' : ` LIMIT ${limit}`;
+        
+        queryEditor.setQuery(`SELECT * FROM ${table}${limitClause};`);
         if (mode === 'view') {
             activateWorkspace('sql', 'view');
             queryEditor.runQuery();
@@ -179,6 +183,19 @@ const tableBrowser = initTableBrowser({
         }
     },
 });
+
+const rowLimitSelect = document.getElementById('row-limit-select');
+if (rowLimitSelect) {
+    rowLimitSelect.addEventListener('change', () => {
+        const table = tableBrowser.getCurrentTable();
+        if (currentWorkspace === 'sql' && queryEditorSection.classList.contains('hidden') && table) {
+            const limit = rowLimitSelect.value;
+            const limitClause = limit === 'all' ? '' : ` LIMIT ${limit}`;
+            queryEditor.setQuery(`SELECT * FROM ${table}${limitClause};`);
+            queryEditor.runQuery();
+        }
+    });
+}
 
 initBackupRestore({
     getCurrentTable: () => tableBrowser.getCurrentTable(),

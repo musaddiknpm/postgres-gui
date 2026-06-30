@@ -229,9 +229,17 @@
                         <span id="query-status" class="text-xs text-gray-500 dark:text-gray-400 truncate max-w-[200px] md:max-w-md"></span>
                     </div>
                     
-                    <button id="btn-minimize-output" class="text-gray-400 hover:text-gray-900 dark:hover:text-white transition-all active:scale-95 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-elephant-500 rounded p-1" aria-label="Minimize Output">
-                        <i class="fas fa-chevron-down text-xs"></i>
-                    </button>
+                    <div class="flex items-center gap-3">
+                        <select id="row-limit-select" class="bg-white dark:bg-[#252526] border border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-300 text-xs rounded px-2 py-1 focus:outline-none focus:ring-1 focus:ring-elephant-500 transition-colors cursor-pointer">
+                            <option value="100">100 rows</option>
+                            <option value="500">500 rows</option>
+                            <option value="1000">1000 rows</option>
+                            <option value="all">All rows</option>
+                        </select>
+                        <button id="btn-minimize-output" class="text-gray-400 hover:text-gray-900 dark:hover:text-white transition-all active:scale-95 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-elephant-500 rounded p-1" aria-label="Minimize Output">
+                            <i class="fas fa-chevron-down text-xs"></i>
+                        </button>
+                    </div>
                 </div>
                 
                 

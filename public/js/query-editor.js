@@ -18,46 +18,53 @@ function renderResults(resultsWrapper, data) {
     const VISIBLE_ROWS = 40; 
     const OVERSCROLL_ROWS = 20; 
 
-    resultsWrapper.innerHTML = '';
-    
+    resultsWrapper.innerHTML = `
+        <div class="flex flex-col h-full w-full relative">
+            <div id="header-container" class="overflow-hidden shrink-0 bg-gray-100 dark:bg-[#2d2d2d] border-b border-gray-200 dark:border-gray-700 z-10 sticky top-0">
+                <table class="text-sm text-left border-collapse" style="table-layout: fixed;">
+                    <thead class="text-gray-700 dark:text-gray-300">
+                        <tr id="table-header-row"></tr>
+                    </thead>
+                </table>
+            </div>
+            <div id="body-container" class="flex-1 overflow-auto">
+                <div id="scroll-spacer" style="position: relative; min-width: max-content;">
+                    <div id="viewport" style="position: absolute; top: 0; left: 0; width: 100%;"></div>
+                </div>
+            </div>
+        </div>
+    `;
+
+    const headerContainer = resultsWrapper.querySelector('#header-container');
+    const bodyContainer = resultsWrapper.querySelector('#body-container');
+    const scrollSpacer = resultsWrapper.querySelector('#scroll-spacer');
+    const viewport = resultsWrapper.querySelector('#viewport');
+    const headerRow = resultsWrapper.querySelector('#table-header-row');
 
     const totalHeight = data.rows.length * ROW_HEIGHT;
-    const scrollSpacer = document.createElement('div');
-    scrollSpacer.style.height = `${totalHeight + ROW_HEIGHT}px`; 
-    scrollSpacer.style.position = 'relative';
-    scrollSpacer.style.minWidth = 'max-content';
+    scrollSpacer.style.height = `${totalHeight}px`;
 
+    let headerHtml = '';
+    data.fields.forEach(f => {
+        headerHtml += `<th class="px-3 py-1.5 font-semibold border-r border-gray-200 dark:border-gray-700 whitespace-nowrap" style="width: 200px;">${escapeHTML(f)}</th>`;
+    });
+    headerRow.innerHTML = headerHtml;
     
-    const viewport = document.createElement('div');
-    viewport.style.position = 'absolute';
-    viewport.style.top = '0';
-    viewport.style.left = '0';
-    viewport.className = 'w-full';
-
-    scrollSpacer.appendChild(viewport);
-    resultsWrapper.appendChild(scrollSpacer);
+    // Set width of header table to match body precisely
+    headerContainer.querySelector('table').style.width = `${data.fields.length * 200}px`;
 
     function drawChunk(scrollTop) {
-        
         let startIdx = Math.floor(scrollTop / ROW_HEIGHT) - OVERSCROLL_ROWS;
         if (startIdx < 0) startIdx = 0;
 
         let endIdx = startIdx + VISIBLE_ROWS + (OVERSCROLL_ROWS * 2);
         if (endIdx > data.rows.length) endIdx = data.rows.length;
 
-        
-        viewport.style.transform = `translateY(${startIdx * ROW_HEIGHT}px)`;
+        viewport.style.top = `${startIdx * ROW_HEIGHT}px`;
 
-        let html = '<table class="w-full text-sm text-left border-collapse" style="table-layout: fixed;">';
-        
-        
-        html += '<thead class="bg-gray-100 dark:bg-[#2d2d2d] sticky top-0 z-10 shadow-sm text-gray-700 dark:text-gray-300"><tr>';
-        data.fields.forEach(f => {
-            html += `<th class="px-3 py-1.5 font-semibold border border-gray-200 dark:border-gray-700 whitespace-nowrap bg-gray-100 dark:bg-[#2d2d2d]" style="width: 200px;">${escapeHTML(f)}</th>`;
-        });
-        html += '</tr></thead><tbody class="text-gray-600 dark:text-gray-400">';
+        let html = `<table class="text-sm text-left border-collapse" style="table-layout: fixed; width: ${data.fields.length * 200}px;">`;
+        html += '<tbody class="text-gray-600 dark:text-gray-400">';
 
-        
         for (let i = startIdx; i < endIdx; i++) {
             const row = data.rows[i];
             html += `<tr class="hover:bg-elephant-50 dark:hover:bg-[#2a2d2e] transition-colors" style="height: ${ROW_HEIGHT}px;">`;
@@ -67,8 +74,7 @@ function renderResults(resultsWrapper, data) {
                 else if (typeof val === 'object') val = escapeHTML(JSON.stringify(val));
                 else val = escapeHTML(String(val));
                 
-                
-                html += `<td class="px-3 py-1 border border-gray-200 dark:border-gray-800 whitespace-nowrap overflow-hidden text-ellipsis" style="max-width: 200px;">${val}</td>`;
+                html += `<td class="px-3 py-1 border border-gray-200 dark:border-gray-800 whitespace-nowrap overflow-hidden text-ellipsis" style="width: 200px; max-width: 200px;">${val}</td>`;
             });
             html += '</tr>';
         }
@@ -81,13 +87,15 @@ function renderResults(resultsWrapper, data) {
 
     let scrollTimeout;
     currentScrollHandler = () => {
+        headerContainer.scrollLeft = bodyContainer.scrollLeft;
+        
         if (scrollTimeout) cancelAnimationFrame(scrollTimeout);
         scrollTimeout = requestAnimationFrame(() => {
-            drawChunk(resultsWrapper.scrollTop);
+            drawChunk(bodyContainer.scrollTop);
         });
     };
 
-    resultsWrapper.addEventListener('scroll', currentScrollHandler);
+    bodyContainer.addEventListener('scroll', currentScrollHandler);
 }
 
 export function init({ getCurrentTable }) {
