@@ -69,12 +69,23 @@ function renderResults(resultsWrapper, data) {
             const row = data.rows[i];
             html += `<tr class="hover:bg-elephant-50 dark:hover:bg-[#2a2d2e] transition-colors" style="height: ${ROW_HEIGHT}px;">`;
             data.fields.forEach(f => {
-                let val = row[f];
-                if (val === null) val = '<span class="text-gray-400 dark:text-gray-600 italic">NULL</span>';
-                else if (typeof val === 'object') val = escapeHTML(JSON.stringify(val));
-                else val = escapeHTML(String(val));
+                let rawVal = row[f];
+                let displayVal;
+                let rawAttr;
+
+                if (rawVal === null) {
+                    displayVal = '<span class="text-gray-400 dark:text-gray-600 italic">NULL</span>';
+                    rawAttr = 'NULL';
+                } else if (typeof rawVal === 'object') {
+                    const jsonStr = JSON.stringify(rawVal);
+                    displayVal = escapeHTML(jsonStr);
+                    rawAttr = escapeHTML(jsonStr);
+                } else {
+                    displayVal = escapeHTML(String(rawVal));
+                    rawAttr = displayVal;
+                }
                 
-                html += `<td class="px-3 py-1 border border-gray-200 dark:border-gray-800 whitespace-nowrap overflow-hidden text-ellipsis" style="width: 200px; max-width: 200px;">${val}</td>`;
+                html += `<td class="px-3 py-1 border border-gray-200 dark:border-gray-800 whitespace-nowrap overflow-hidden text-ellipsis cursor-pointer hover:bg-black/5 dark:hover:bg-white/5 transition-colors" style="width: 200px; max-width: 200px;" data-raw="${rawAttr}" title="Click to view full content">${displayVal}</td>`;
             });
             html += '</tr>';
         }
@@ -227,6 +238,61 @@ export function init({ getCurrentTable }) {
         "Cmd-Enter": function(cm) { runQuery(); },
         "Ctrl-Enter": function(cm) { runQuery(); }
     });
+
+    const cellViewerModal = document.getElementById('cell-viewer-modal');
+    const cellViewerContent = document.getElementById('cell-viewer-content');
+    const btnCloseCellViewer = document.getElementById('btn-close-cell-viewer');
+    const btnCopyCell = document.getElementById('btn-copy-cell');
+    const btnCopyCellText = document.getElementById('btn-copy-cell-text');
+    let currentCellRawData = '';
+
+    resultsWrapper.addEventListener('click', (e) => {
+        const td = e.target.closest('td');
+        if (!td) return;
+        
+        currentCellRawData = td.getAttribute('data-raw') || '';
+        if (currentCellRawData === 'NULL') {
+            cellViewerContent.innerHTML = '<span class="text-gray-400 italic">NULL</span>';
+        } else {
+            // Unescape the attribute string for the textarea
+            const temp = document.createElement('textarea');
+            temp.innerHTML = currentCellRawData;
+            cellViewerContent.textContent = temp.value; 
+        }
+        
+        cellViewerModal.showModal();
+    });
+
+    if (btnCloseCellViewer) {
+        btnCloseCellViewer.addEventListener('click', () => cellViewerModal.close());
+    }
+
+    if (btnCopyCell) {
+        btnCopyCell.addEventListener('click', async () => {
+            try {
+                const textToCopy = currentCellRawData === 'NULL' ? '' : (cellViewerContent.textContent || '');
+                await navigator.clipboard.writeText(textToCopy);
+                btnCopyCellText.textContent = 'Copied!';
+                const icon = btnCopyCell.querySelector('i');
+                if (icon) {
+                    icon.className = 'fas fa-check';
+                }
+                setTimeout(() => {
+                    btnCopyCellText.textContent = 'Copy to Clipboard';
+                    if (icon) icon.className = 'fas fa-copy';
+                }, 2000);
+            } catch (err) {
+                console.error('Failed to copy', err);
+            }
+        });
+    }
+
+    // Close on backdrop click
+    if (cellViewerModal) {
+        cellViewerModal.addEventListener('click', (e) => {
+            if (e.target === cellViewerModal) cellViewerModal.close();
+        });
+    }
 
     return {
         setQuery(sql) { editor.setValue(sql); },

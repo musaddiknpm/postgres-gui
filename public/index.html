@@ -380,6 +380,26 @@
             </div>
         </div>
     </dialog>
+
+    <!-- Cell Viewer Modal -->
+    <dialog id="cell-viewer-modal" class="bg-white dark:bg-[#252526] border border-gray-200 dark:border-gray-700 rounded-lg shadow-2xl p-0 w-full max-w-3xl backdrop:bg-gray-900/30 backdrop:dark:bg-black/60 backdrop:backdrop-blur-sm m-auto">
+        <div class="flex flex-col h-[70vh]">
+            <div class="flex items-center justify-between px-6 py-4 border-b border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-[#1e1e1e] rounded-t-lg shrink-0">
+                <h3 class="font-semibold text-gray-900 dark:text-white truncate">Cell Data Viewer</h3>
+                <button id="btn-close-cell-viewer" class="text-gray-400 hover:text-gray-900 dark:hover:text-white transition-colors active:scale-95 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-elephant-500 rounded p-1">
+                    <i class="fas fa-times text-lg"></i>
+                </button>
+            </div>
+            <div class="flex-1 overflow-auto p-6 bg-white dark:bg-[#1e1e1e]">
+                <pre id="cell-viewer-content" class="text-sm font-mono text-gray-800 dark:text-gray-300 whitespace-pre-wrap break-words w-full m-0"></pre>
+            </div>
+            <div class="px-6 py-4 border-t border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-[#1e1e1e] rounded-b-lg flex justify-end shrink-0">
+                <button id="btn-copy-cell" class="px-4 py-2 bg-elephant-600 hover:bg-elephant-700 text-white text-sm font-medium rounded transition-all active:scale-95 flex items-center gap-2 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-elephant-500">
+                    <i class="fas fa-copy"></i> <span id="btn-copy-cell-text">Copy to Clipboard</span>
+                </button>
+            </div>
+        </div>
+    </dialog>
     
     <div id="toast-container" class="fixed bottom-4 right-4 z-[9999] flex flex-col gap-2 pointer-events-none"></div>
 
